@@ -1,0 +1,44 @@
+load("@protobuf//bazel:proto_library.bzl", "proto_library")
+load("@protobuf//bazel:py_proto_library.bzl", "py_proto_library")
+load("@rules_python//python:defs.bzl", "py_binary")
+
+load(":defs.bzl", "copy_file")
+
+# to satisfy `proto_library`'s requirement (target in same package as file)
+copy_file(
+    name = "remote_execution_log_proto_in_package",
+    input = "@remote_execution_log_proto//file:remote_execution_log.proto",
+    output = "remote_execution_log.proto",
+)
+
+# see: https://github.com/bazelbuild/bazel/blob/37413dc64e3a38db235c1547f10bd50e215b14a2/src/main/protobuf/BUILD#L237-L247
+proto_library(
+    name = "remote_execution_log_proto",
+    srcs = [":remote_execution_log.proto"],
+    deps = [
+        "@protobuf//:timestamp_proto",
+        "@googleapis//google/bytestream:bytestream_proto",
+        "@googleapis//google/longrunning:operations_proto",
+        "@googleapis//google/rpc:status_proto",
+        "@bazel_remote_apis//build/bazel/remote/execution/v2:remote_execution_proto",
+    ],
+)
+
+py_proto_library(
+    name = "remote_execution_log_proto_py",
+    deps = [":remote_execution_log_proto"],
+)
+
+py_binary(
+    name = "log2trace",
+    srcs = [":log2trace.py"],
+    deps = [":remote_execution_log_proto_py"],
+    python_version = "3.14",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = module_name(),
+    actual = ":log2trace",
+    visibility = ["//visibility:public"],
+)

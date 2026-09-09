@@ -1,0 +1,8 @@
+common --incompatible_default_to_explicit_init_py
+
+# ignore C/C++ warnings:
+common --enable_platform_specific_config
+common:linux --per_file_copt=external/.*@-w --host_per_file_copt=external/.*@-w
+common:macos --per_file_copt=external/.*@-w --host_per_file_copt=external/.*@-w
+
+run --run_in_cwd
